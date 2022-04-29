@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { commerce } from './lib/commerce'
 import Products from './components/Products';
 import Navbar from './components/Navbar';
-import { useEffect } from 'react/cjs/react.production.min';
 
 
 const App = () => {
@@ -18,8 +17,11 @@ const App = () => {
     fetchProducts();
   }, []);
 
+  console.log(products)
+
   return (
     <div>
+      <Navbar />
       <Products products={products}/>
     </div>
   );
