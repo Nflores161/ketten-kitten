@@ -21,7 +21,7 @@ const CartNav = ({ cart, onRemoveFromCart, onUpdateCartQty, onEmptyCart }) => {
 
 
     return (
-        <div>
+        <div id='cart-nav'>
             <h1>Cart Nav</h1>
             <div onClick={() => setCartVisible(!isCartVisible)}>
                 {!isCartVisible ? renderOpenButton() : renderCloseButton()}

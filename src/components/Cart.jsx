@@ -1,7 +1,7 @@
 import React from 'react';
 import CartItem from './CartItem.jsx';
 import PropTypes from 'prop-types';
-
+import { Link } from 'react-router-dom';
 
 const Cart = ({ cart, onRemoveFromCart, onEmptyCart, onUpdateCartQty}) => {
 
@@ -37,15 +37,17 @@ const Cart = ({ cart, onRemoveFromCart, onEmptyCart, onUpdateCartQty}) => {
     )
 
     return (
-        <div>
+        <div id='cart'>
             <h4>Your Shopping Cart</h4>
             {renderEmptyMessage()}
             {renderItems()}
             <button onClick={handleEmptyCart}>Empty Cart</button>
             {renderTotal()}
             <div>
-                <button>Empty Cart</button>
-                <button>Checkout</button>
+                <button onClick={handleEmptyCart}>Empty Cart</button>
+                <Link to='/checkout'>
+                    Checkout
+                </Link>
             </div>
         </div>
     )

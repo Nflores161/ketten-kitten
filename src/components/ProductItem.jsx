@@ -10,7 +10,7 @@ const ProductItem = ({ product, onAddToCart }) => {
 
 
   return (
-    <div>
+    <div id='product-item'>
       <div>
         <h2>{product.name}</h2>
       </div>

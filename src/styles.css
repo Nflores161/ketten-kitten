@@ -1,4 +1,42 @@
+body, html {
+    text-align: center;
+}
+
 .item-display{
     width: 300px;
     height: 300px
+}
+
+.item-img{
+    width: 100px;
+    height: 100px
+}
+
+#cart {
+    background-color: aqua;
+}
+
+#cart-item {
+    background-color: brown;
+}
+
+#cart-nav {
+    background-color: darkgoldenrod;
+}
+
+#checkout {
+    background-color: rgb(255, 0, 212);
+}
+
+#product-item {
+    background-color: purple;
+}
+
+#product-list {
+    background-color: yellow;
+}
+
+#navbar {
+    background-color: maroon;
+    color: whitesmoke;
 }

@@ -6,7 +6,7 @@ const ProductsList = ({ products, onAddToCart }) => {
 //destructure the map function below
 
   return (
-    <div>
+    <div id='product-list'>
       {products.map(product => {
         return (
           <ProductItem
