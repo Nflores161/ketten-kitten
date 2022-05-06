@@ -87,19 +87,12 @@ const App = () => {
     });
   }
 
-
-
-
-
-
-
   useEffect(() => {
     fetchProducts();
     fetchCart();
   }, []);
 
 
-<Route/>
   return (
     <div>
       <Navbar />
@@ -109,8 +102,6 @@ const App = () => {
             onRemoveFromCart={handleRemoveFromCart}
             onEmptyCart={handleEmptyCart}
           />
-          
-
       <Routes>
         <Route 
           path='/'
@@ -129,10 +120,8 @@ const App = () => {
             />
           }
         />
-
       </Routes>
-    </div>
-    
+    </div>  
   );
 }
 
