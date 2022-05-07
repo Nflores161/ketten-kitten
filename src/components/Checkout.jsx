@@ -4,6 +4,9 @@ const Checkout = ({ cart }) => {
   const [checkOutToken, setCheckOutToken] = useState({})
   const [countries, setCountries] = useState({})
   const [subdivisions, setSubdivisions] = useState({})
+  const [shippingOptions, setShippingOptions] = useState([])
+  const [shippingOption, setShippingOption] = useState('')
+
   const [formData, setFormData] = useState({
     checkoutToken: {},
     // Customer details
@@ -26,16 +29,20 @@ const Checkout = ({ cart }) => {
     // Shipping and fulfillment data
     shippingCountries: countries,
     shippingSubdivisions: subdivisions,
-    shippingOptions: [],
-    shippingOption: '',
+    shippingOptions: shippingOptions,
+    shippingOption: shippingOption,
   });
 
   const generateCheckoutToken = () => {
     if (cart.line_items.length) {
       commerce.checkout.generateToken(cart.id, { type: 'cart' })
         .then((token) => {
-          setCheckOutToken(token);
-        }).catch((error) => {
+          setCheckOutToken(token)
+        })
+        .then(() => {
+          fetchShippingCountries(checkOutToken.id)
+        })
+        .catch((error) => {
           console.log('There was an error in generating a token', error);
         })
     }
@@ -59,11 +66,26 @@ const Checkout = ({ cart }) => {
       });
   }
 
+  const fetchShippingOptions = (checkoutTokenID, country, stateProvince = null) => {
+    commerce.checkout.getSippingOptions(checkoutTokenID, 
+      {
+        country: country,
+        region: stateProvince
+      }).then((options) => {
+        const shippingOption1 = options[0] || null;
+        setShippingOptions(options)
+        setShippingOption(shippingOption1)
+      }).catch((error) => {
+        console.log('There was an error fetching the shipping methods', error)
+      })
+  }
+
   //Generate token on page load
   useEffect(() => {
-    generateCheckoutToken()
-    fetchShippingCountries()
-    fetchSubdivisions()
+    generateCheckoutToken();
+    // fetchShippingCountries();
+    // fetchSubdivisions();
+    fetchShippingOptions();
   }, []);
 
 
