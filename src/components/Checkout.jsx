@@ -67,7 +67,7 @@ const Checkout = ({ cart }) => {
   }
 
   const fetchShippingOptions = (checkoutTokenID, country, stateProvince = null) => {
-    commerce.checkout.getSippingOptions(checkoutTokenID, 
+    commerce.checkout.getShippingOptions(checkoutTokenID, 
       {
         country: country,
         region: stateProvince
@@ -144,9 +144,6 @@ const Checkout = ({ cart }) => {
       </div>
     );
   };
-
-
-
 
   return (
     <div id='checkout'>Checkout
