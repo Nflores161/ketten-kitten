@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { commerce } from '../lib/commerce'
-const Checkout = ({ cart }) => {
+const Checkout = ( {cart} ) => {
   const [checkOutToken, setCheckOutToken] = useState({})
-  const [countries, setCountries] = useState({})
-  const [subdivisions, setSubdivisions] = useState({})
+  const [shippingCountries, setShippingCountries] = useState({})
+  const [shippingSubdivisions, setShippingSubdivisions] = useState({})
   const [shippingOptions, setShippingOptions] = useState([])
   const [shippingOption, setShippingOption] = useState('')
+  const [shippingCountry, setShippingCountry] = useState('')
 
   const [formData, setFormData] = useState({
     checkoutToken: {},
@@ -27,13 +28,14 @@ const Checkout = ({ cart }) => {
     ccv: '',
     billingPostalZipcode: '',
     // Shipping and fulfillment data
-    shippingCountries: countries,
-    shippingSubdivisions: subdivisions,
-    shippingOptions: shippingOptions,
-    shippingOption: shippingOption,
+    shippingCountries: {},
+    shippingSubdivisions: {},
+    shippingOptions: [],
+    shippingOption: '',
   });
 
   const generateCheckoutToken = () => {
+    
     if (cart.line_items.length) {
       commerce.checkout.generateToken(cart.id, { type: 'cart' })
         .then((token) => {
@@ -51,7 +53,8 @@ const Checkout = ({ cart }) => {
   const fetchShippingCountries = (checkOutTokenId) => {
     commerce.services.localeListShippingCountries(checkOutTokenId)
       .then((countries) => {
-        setCountries(countries.countries)
+        setShippingCountries(countries.countries)
+        console.log(shippingCountries)
       }).catch((error) => {
         console.log('There was an error fetching a list of shipping countries', error);
       });
@@ -60,17 +63,16 @@ const Checkout = ({ cart }) => {
   const fetchSubdivisions = (countryCode) => {
     commerce.services.localeListSubdivisions(countryCode)
       .then((subdivisions) => {
-        setSubdivisions(subdivisions.subdivisions)
+        setShippingSubdivisions(subdivisions.subdivisions)
+        console.log(shippingSubdivisions)
       }).catch((error) => {
         console.log('There was an error fetching the subdivisions.', error);
       });
   }
 
-  const fetchShippingOptions = (checkoutTokenID, country, stateProvince = null) => {
-    commerce.checkout.getSippingOptions(checkoutTokenID, 
-      {
-        country: country,
-        region: stateProvince
+  const fetchShippingOptions = (checkoutTokenId, country, stateProvince = null) => {
+    commerce.checkout.getShippingOptions(checkoutTokenId, 
+      {country: country
       }).then((options) => {
         const shippingOption1 = options[0] || null;
         setShippingOptions(options)
@@ -84,9 +86,9 @@ const Checkout = ({ cart }) => {
   useEffect(() => {
     generateCheckoutToken();
     // fetchShippingCountries();
-    // fetchSubdivisions();
-    fetchShippingOptions();
-  }, []);
+    fetchSubdivisions();
+    fetchShippingOptions(checkOutToken.id, shippingCountry);
+  }, [shippingCountry]);
 
 
   const handleChange = (e) => {
@@ -124,6 +126,56 @@ const Checkout = ({ cart }) => {
 
           <label htmlFor="shippingPostalZipCode">Postal/Zip code</label>
           <input onChange={handleChange} type="text" value={formData.shippingPostalZipCode} name="shippingPostalZipCode" placeholder="Enter your postal/zip code" required />
+
+
+          {/* {SHIPPING SELECT MENU} */}
+          <label className="checkout__label" htmlFor="shippingCountry">Country</label>
+            <select
+              value={shippingCountry}
+              name="shippingCountry"
+              className="checkout__select"
+            >
+              <option disabled>Country</option>
+              {
+                 Object.keys(shippingCountries).map((index) => {
+                  return (
+                    <option value={index} key={index}>{shippingCountries[index]}</option>
+                  )
+                })
+              };
+            </select>
+
+            <label className="checkout__label" htmlFor="shippingStateProvince">State/province</label>
+            <select 
+              value={formData.shippingStateProvince}
+              name="shippingStateProvince"
+              className="checkout__select"
+            >
+              <option className="checkout__option" disabled>State/province</option>
+              {
+                Object.keys(shippingSubdivisions).map((index) => {
+                  return (
+                    <option value={index} key={index}>{shippingSubdivisions[index]}</option>
+                  );
+                })
+              };
+            </select>
+
+            <label className="checkout__label" htmlFor="shippingOption">Shipping method</label>
+            <select
+              value={shippingOption.id}
+              name="shippingOption"
+              className="checkout__select"
+            >
+              <option className="checkout__select-option" disabled>Select a shipping method</option>
+              {
+                shippingOptions.map((method, index) => {
+                  return (
+                    <option className="checkout__select-option" value={method.id} key={index}>{`${method.description} - $${method.price.formatted_with_code}` }</option>
+                  );
+                })
+              };
+            </select>
 
           <h4>Payment information</h4>
 
