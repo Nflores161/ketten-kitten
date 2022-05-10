@@ -197,9 +197,6 @@ const Checkout = ( {cart} ) => {
     );
   };
 
-
-
-
   return (
     <div id='checkout'>Checkout
       <div>
