@@ -3,13 +3,17 @@ import { commerce } from './lib/commerce'
 import ProductsList from './components/ProductsList';
 import Navbar from './components/Navbar';
 import CartNav from './components/CartNav';
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 // import Cart from './components/Cart';
 import Checkout from './components/Checkout';
+import Confirmation from './components/Confirmation';
 
 const App = () => {
   const [products, setProducts] = useState([])
   const [cart, setCart] = useState({});
+  const [order, setOrder] = useState({})
+
+  let navigate = useNavigate()
 
   const fetchProducts = () => {
     commerce.products.list().then((products) => {
@@ -87,6 +91,29 @@ const App = () => {
     });
   }
 
+  const handleCaptureCheckout = (checkoutTokenId, newOrder) => {
+    commerce.checkout.capture(checkoutTokenId, newOrder).then((order) => {
+      setOrder(order)
+      refreshCart()
+      navigate('/confirmation')
+      window.sessionStorage.setItem('order_receipt', JSON.stringify(order))
+    }).catch((error) => {
+      console.log('There was an error confirming your order', error)
+    })
+  }
+
+
+  /*Refreshes to a new cart when order is confirmed*/
+  const refreshCart = () => {
+    commerce.cart.refresh().then((newCart) => {
+      setCart(newCart);
+    }).catch((error) => {
+      console.log('There was an error refreshing your cart', error)
+    })
+  }
+
+  
+
   useEffect(() => {
     fetchProducts();
     fetchCart();
@@ -117,6 +144,15 @@ const App = () => {
           element= {
             <Checkout
               cart={cart}
+              onCaptureCheckout={handleCaptureCheckout}
+            />
+          }
+        />
+        <Route 
+          path='/confirmation'
+          element= {
+            <Confirmation
+              order={order}
             />
           }
         />

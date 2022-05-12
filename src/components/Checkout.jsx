@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { commerce } from '../lib/commerce'
-const Checkout = ( {cart} ) => {
+
+
+const Checkout = ( {cart, onCaptureCheckout} ) => {
   const [checkOutToken, setCheckOutToken] = useState({})
   const [shippingCountries, setShippingCountries] = useState({})
   const [shippingSubdivisions, setShippingSubdivisions] = useState({})
@@ -9,7 +11,7 @@ const Checkout = ( {cart} ) => {
   const [shippingCountry, setShippingCountry] = useState('')
 
   const [formData, setFormData] = useState({
-    checkoutToken: {},
+    // checkoutToken: {},
     // Customer details
     firstName: '',
     lastName: '',
@@ -20,18 +22,18 @@ const Checkout = ( {cart} ) => {
     shippingCity: '',
     shippingStateProvince: '',
     shippingPostalZipCode: '',
-    shippingCountry: '',
+    shippingCountry: shippingCountry,
     // Payment details
     cardNum: '',
     expMonth: '',
     expYear: '',
     ccv: '',
-    billingPostalZipcode: '',
+    billingPostalZipCode: '',
     // Shipping and fulfillment data
-    shippingCountries: {},
-    shippingSubdivisions: {},
-    shippingOptions: [],
-    shippingOption: '',
+    shippingCountries: shippingCountries,
+    shippingSubdivisions: shippingSubdivisions,
+    shippingOptions: shippingOptions,
+    shippingOption: shippingOption,
   });
 
   const generateCheckoutToken = () => {
@@ -54,7 +56,6 @@ const Checkout = ( {cart} ) => {
     commerce.services.localeListShippingCountries(checkOutTokenId)
       .then((countries) => {
         setShippingCountries(countries.countries)
-        console.log(shippingCountries)
       }).catch((error) => {
         console.log('There was an error fetching a list of shipping countries', error);
       });
@@ -64,7 +65,7 @@ const Checkout = ( {cart} ) => {
     commerce.services.localeListSubdivisions(countryCode)
       .then((subdivisions) => {
         setShippingSubdivisions(subdivisions.subdivisions)
-        console.log(shippingSubdivisions)
+        // console.log(shippingSubdivisions)
       }).catch((error) => {
         console.log('There was an error fetching the subdivisions.', error);
       });
@@ -72,11 +73,13 @@ const Checkout = ( {cart} ) => {
 
   const fetchShippingOptions = (checkoutTokenId, country, stateProvince = null) => {
     commerce.checkout.getShippingOptions(checkoutTokenId, 
-      {country: country
+      {
+        country: country,
+        region : stateProvince 
       }).then((options) => {
         const shippingOption1 = options[0] || null;
-        setShippingOptions(options)
         setShippingOption(shippingOption1)
+        setShippingOptions(options)
       }).catch((error) => {
         console.log('There was an error fetching the shipping methods', error)
       })
@@ -86,9 +89,27 @@ const Checkout = ( {cart} ) => {
   useEffect(() => {
     generateCheckoutToken();
     // fetchShippingCountries();
-    fetchSubdivisions();
+    // fetchSubdivisions();
     fetchShippingOptions(checkOutToken.id, shippingCountry);
   }, [shippingCountry]);
+
+
+  const sanitizedLineItems = (lineItems) => {
+    return lineItems.reduce((data, lineItem) => {
+      const item = data
+      let variantData = null
+      if(lineItem.selected_options.length) {
+        variantData = {
+          [lineItems.selected_options[0].group_id]: lineItem.selected_options[0].option_id,
+        };
+      }
+      item[lineItem.id] = {
+        quantity: lineItem.quantity,
+        variants: variantData,
+      };
+     return item; 
+    }, {})
+  };
 
 
   const handleChange = (e) => {
@@ -98,10 +119,55 @@ const Checkout = ( {cart} ) => {
     });
   };
 
+  const handleShippingCountryChange = (e) => {
+    const currentValue = e.target.value
+    setShippingCountry(currentValue);
+    fetchSubdivisions(currentValue);
+  };
+
+   const handleSubdivisionChange = (e) => {
+    const currentValue = e.target.value;
+    fetchShippingOptions(checkOutToken.id, shippingCountry, currentValue)
+  }
+
+   const handleCaptureCheckout = (e) => {
+    e.preventDefault();
+    const orderData = {
+      line_items: sanitizedLineItems(cart.line_items),
+      customer: {
+        firstname: formData.firstName,
+        lastname: formData.lastName,
+        email: formData.email,
+      },
+      shipping: {
+        name: formData.shippingName,
+        street: formData.shippingStreet,
+        town_city: formData.shippingCity,
+        county_state: formData.shippingStateProvince,
+        postal_zip_code: formData.shippingPostalZipCode,
+        country: formData.shippingCountry,
+      },
+      fulfillment: {
+        shipping_method: formData.shippingOption.id
+      },
+      payment: {
+        gateway: "test_gateway",
+        card: {
+          number: formData.cardNum,
+          expiry_month: formData.expMonth,
+          expiry_year: formData.expYear,
+          cvc: formData.ccv,
+          postal_zip_code: formData.billingPostalZipCode,
+        },
+      },
+    };
+    onCaptureCheckout(checkOutToken.id, orderData);
+  };
+
   const renderCheckoutForm = () => {
     return (
       <div>
-        <form>
+        <form onChange={handleChange}>
           <h4>Customer information</h4>
 
           <label htmlFor="firstName">First name</label>
@@ -128,12 +194,13 @@ const Checkout = ( {cart} ) => {
           <input onChange={handleChange} type="text" value={formData.shippingPostalZipCode} name="shippingPostalZipCode" placeholder="Enter your postal/zip code" required />
 
 
-          {/* {SHIPPING SELECT MENU} */}
+          {/* {SHIPPING SELECT MENU} ----> bug inside shipping countries when merchant only allows 1 country*/}
           <label className="checkout__label" htmlFor="shippingCountry">Country</label>
             <select
               value={shippingCountry}
               name="shippingCountry"
               className="checkout__select"
+              onChange={handleShippingCountryChange}
             >
               <option disabled>Country</option>
               {
@@ -149,6 +216,7 @@ const Checkout = ( {cart} ) => {
             <select 
               value={formData.shippingStateProvince}
               name="shippingStateProvince"
+              onChange={handleSubdivisionChange}
               className="checkout__select"
             >
               <option className="checkout__option" disabled>State/province</option>
@@ -165,6 +233,7 @@ const Checkout = ( {cart} ) => {
             <select
               value={shippingOption.id}
               name="shippingOption"
+              onChange={handleChange}
               className="checkout__select"
             >
               <option className="checkout__select-option" disabled>Select a shipping method</option>
@@ -191,7 +260,7 @@ const Checkout = ( {cart} ) => {
           <label htmlFor="ccv">CCV</label>
           <input onChange={handleChange} type="text" name="ccv" value={formData.ccv} placeholder="CCV (3 digits)" />
 
-          <button>Confirm order</button>
+          <button onClick={handleCaptureCheckout} className="checkout__btn-confirm">Confirm order</button>
         </form>
       </div>
     );
