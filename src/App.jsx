@@ -94,9 +94,9 @@ const App = () => {
   const handleCaptureCheckout = (checkoutTokenId, newOrder) => {
     commerce.checkout.capture(checkoutTokenId, newOrder).then((order) => {
       setOrder(order)
+      window.localStorage.setItem('order_receipt', JSON.stringify(order))
       refreshCart()
       navigate('/confirmation')
-      window.sessionStorage.setItem('order_receipt', JSON.stringify(order))
     }).catch((error) => {
       console.log('There was an error confirming your order', error)
     })

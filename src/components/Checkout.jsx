@@ -28,7 +28,9 @@ const Checkout = ( {cart, onCaptureCheckout} ) => {
     expMonth: '',
     expYear: '',
     ccv: '',
-    billingPostalZipCode: '',
+    billingPostalZipcode: '',
+    pay_what_you_want: "500000",
+
     // Shipping and fulfillment data
     shippingCountries: shippingCountries,
     shippingSubdivisions: shippingSubdivisions,
@@ -148,7 +150,7 @@ const Checkout = ( {cart, onCaptureCheckout} ) => {
         country: formData.shippingCountry,
       },
       fulfillment: {
-        shipping_method: formData.shippingOption.id
+        shipping_method: shippingOption.id
       },
       payment: {
         gateway: "test_gateway",
@@ -157,9 +159,10 @@ const Checkout = ( {cart, onCaptureCheckout} ) => {
           expiry_month: formData.expMonth,
           expiry_year: formData.expYear,
           cvc: formData.ccv,
-          postal_zip_code: formData.billingPostalZipCode,
+          postal_zip_code: formData.shippingPostalZipCode,
         },
       },
+      pay_what_you_want: formData.pay_what_you_want
     };
     onCaptureCheckout(checkOutToken.id, orderData);
   };
@@ -231,7 +234,7 @@ const Checkout = ( {cart, onCaptureCheckout} ) => {
 
             <label className="checkout__label" htmlFor="shippingOption">Shipping method</label>
             <select
-              value={shippingOption.id}
+              value={formData.shippingOption.id}
               name="shippingOption"
               onChange={handleChange}
               className="checkout__select"

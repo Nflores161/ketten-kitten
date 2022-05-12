@@ -42,7 +42,7 @@ const Confirmation = ({order}) => {
    
   return (
     <div>
-
+      {renderOrderSummary()}
     </div>
   )
 }
